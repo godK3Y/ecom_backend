@@ -1,42 +1,22 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Body, Req, UseGuards, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { RegisterDto } from './dto/register.dto';
+import { UserResponseDto } from './dto/user-response.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Post('register')
+  async register(@Body() registerDTO: RegisterDto) {
+    const user = await this.usersService.register(registerDTO);
+    return new UserResponseDto(user);
   }
-
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  @UseGuards(AuthGuard('jwt'))
+  @Get('profile')
+  async getProfile(@Req() req) {
+    const user = await this.usersService.findByEmail(req.user.email);
+    return new UserResponseDto(user);
   }
 }
