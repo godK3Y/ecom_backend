@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from '../users/dto/register.dto';
-import { JwtPayloadDto, LoginResponseDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -22,12 +21,11 @@ export class AuthService {
     return null;
   }
 
-  async login(user: JwtPayloadDto): Promise<LoginResponseDto> {
-    console.log('🚀 Login process for user:', user._id);
-    const payload = { email: user.email, sub: user._id };
-    const token = await this.jwtService.signAsync(payload);
-    console.log('🎟️ JWT token generated successfully');
-    return { access_token: token };
+  async login(user: any) {
+    const payload = { sub: user.id, email: user.email };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
 
   async findByEmail(email: string) {

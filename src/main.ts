@@ -40,6 +40,7 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
