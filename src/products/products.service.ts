@@ -6,11 +6,13 @@ import { Product } from './schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
+import { Category } from '../categories/schemas/category.schema';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<Product>,
+    @InjectModel(Category.name) private categoryModel: Model<Category>,
   ) {}
 
   async create(dto: CreateProductDto) {
@@ -47,17 +49,28 @@ export class ProductsService {
       search,
       minPrice,
       maxPrice,
-      inStock,
       sortBy = 'createdAt',
       sortOrder = 'desc',
       page = '1',
       limit = '12',
+      audience,
     } = q;
 
     const filter: FilterQuery<Product> = {};
 
-    if (categoryId) filter.categoryId = categoryId; // ObjectId string
-    if (typeof search === 'string' && search.trim()) {
+    // audience via category audiences
+    if (audience && !categoryId) {
+      const catIds = await this.categoryModel
+        .find(
+          { $or: [{ audiences: audience }, { audiences: { $size: 0 } }] },
+          { _id: 1 },
+        )
+        .lean();
+      filter.categoryId = { $in: catIds.map((c) => c._id) };
+    }
+
+    if (categoryId) filter.categoryId = categoryId;
+    if (search?.trim()) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
@@ -68,12 +81,10 @@ export class ProductsService {
       filter.price = { ...(filter.price || {}), $gte: Number(minPrice) };
     if (maxPrice)
       filter.price = { ...(filter.price || {}), $lte: Number(maxPrice) };
-    if (inStock === 'true') filter.stock = { $gt: 0 };
 
     const sort: Record<string, 1 | -1> = {
       [sortBy]: sortOrder === 'desc' ? -1 : 1,
     };
-
     const pageNum = Math.max(Number(page) || 1, 1);
     const limitNum = Math.min(Math.max(Number(limit) || 12, 1), 100);
     const skip = (pageNum - 1) * limitNum;
