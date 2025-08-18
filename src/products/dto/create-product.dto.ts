@@ -1,61 +1,40 @@
 // src/products/dto/create-product.dto.ts
 import {
-  IsString,
-  IsNumber,
-  IsBoolean,
-  IsOptional,
   IsArray,
+  IsBoolean,
   IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 
 export class CreateProductDto {
-  @IsString()
-  name: string;
+  @IsString() name!: string;
+  @IsString() slug!: string;
+  @IsOptional() @IsString() description?: string;
 
-  @IsString()
-  slug: string;
+  @IsNumber() price!: number;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @IsMongoId() categoryId!: string;
+  @IsOptional() @IsMongoId() subCategoryId?: string | null;
 
-  @IsArray()
-  @IsOptional()
-  images?: string[];
+  @IsOptional() @IsNumber() stock?: number;
 
-  @IsArray()
-  @IsOptional()
-  videos?: string[];
+  @IsOptional() @IsArray() images?: string[];
+  @IsOptional() @IsArray() videos?: string[];
 
-  @IsNumber()
-  price: number;
+  @IsOptional() @IsArray() variants?: any[];
+  @IsOptional() @IsArray() variantCombinations?: any[];
 
-  @IsMongoId()
-  categoryId: string;
+  @IsOptional() @IsNumber() rating?: number;
+  @IsOptional() @IsNumber() totalReviews?: number;
 
-  @IsOptional()
-  @IsMongoId()
-  subCategoryId?: string;
+  @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional() @IsBoolean() isFeatured?: boolean;
 
-  @IsNumber()
-  @IsOptional()
-  stock?: number;
+  @IsOptional() @IsArray() tags?: string[];
 
-  @IsOptional()
-  variants?: any[];
-
-  @IsOptional()
-  variantCombinations?: any[];
-
-  @IsNumber()
-  @IsOptional()
-  rating?: number;
-
-  @IsNumber()
-  @IsOptional()
-  totalReviews?: number;
-
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
+  @IsOptional() @IsString() sku?: string;
 }
+
+export class UpdateProductDto extends CreateProductDto {}

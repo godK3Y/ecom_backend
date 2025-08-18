@@ -25,17 +25,17 @@ export class Product extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
   categoryId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Category' })
-  subCategoryId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Category', default: null })
+  subCategoryId?: Types.ObjectId | null;
 
   @Prop({ default: 0 })
   stock: number;
 
   @Prop({ type: Array, default: [] })
-  variants: any[]; // could be refined to a sub-schema for { name, values }
+  variants: any[]; // Example: [{ name: "Color", values: ["Red","Blue"] }]
 
   @Prop({ type: Array, default: [] })
-  variantCombinations: any[]; // could refine to { combination: {size, color}, price, stock }
+  variantCombinations: any[]; // Example: [{ combination: {Size: "M", Color: "Red"}, price, stock }]
 
   @Prop({ default: 0 })
   rating: number;

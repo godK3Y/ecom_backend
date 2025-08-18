@@ -23,14 +23,19 @@ export class ProductsController {
     return this.productsService.create(dto);
   }
 
+  // @Post('bulk')
+  // bulk(@Body() items: Partial<CreateProductDto>[]) {
+  //   return this.productsService.upsertManyByKey(items);
+  // }
+
   @Get()
-  findAll(@Query() query: QueryProductDto) {
-    return this.productsService.findAllWithQuery(query);
+  findAll(@Query() q: QueryProductDto) {
+    return this.productsService.findAllWithQuery(q);
   }
 
   @Get('featured')
-  featured() {
-    return this.productsService.findFeatured();
+  featured(@Query('limit') limit?: string) {
+    return this.productsService.findFeatured(limit ? Number(limit) : 20);
   }
 
   @Get(':id')
