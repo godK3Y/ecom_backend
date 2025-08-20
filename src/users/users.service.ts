@@ -17,20 +17,6 @@ export class UsersService {
     if (existingUser) {
       throw new ConflictException('อีเมลนี้ถูกใช้งานในระบบแล้ว');
     }
-
-    // // ตรวจสอบบทบาทว่าเป็น branch owner จำเป็นต้องมี branchId
-    // if (registerDTO.role === 'branch_owner' && !registerDTO.branchId) {
-    //   throw new BadRequestException('ผู้ดูแลสาขาต้องระบุรหัสสาขา');
-    // }
-
-    // // สำหรับ super_admin ไม่จำเป็นต้องมี branchId
-    // if (registerDto.role === 'super_admin') {
-    //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //   const { branchId, ...superAdminData } = registerDTO;
-    //   const newUser = new this.userModel(superAdminData);
-    //   return await newUser.save();
-    // }
-
     const newUser = new this.userModel(registerDTO);
     return await newUser.save();
   }
