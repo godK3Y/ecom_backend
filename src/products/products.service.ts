@@ -19,7 +19,6 @@ export class ProductsService {
     @InjectModel(Category.name) private categoryModel: Model<Category>,
   ) {}
 
-  /** Validate category references */
   private async ensureCategoriesExist(
     categoryId?: string | null,
     subCategoryId?: string | null,
@@ -86,40 +85,63 @@ export class ProductsService {
       .exec();
   }
 
-  // /** Upsert by key (sku if present, otherwise slug) */
-  // async upsertManyByKey(items: Partial<Product>[]) {
-  //   const ops = await Promise.all(
-  //     items.map(async (p) => {
-  //       // Validate categories for each item that has ids
-  //       if (p['categoryId'] || p['subCategoryId']) {
-  //         await this.ensureCategoriesExist(
-  //           p['categoryId'] as any,
-  //           p['subCategoryId'] as any,
-  //         );
-  //       }
-  //       const key = (p['sku'] as any) ?? (p['slug'] as any);
-  //       if (!key)
-  //         throw new BadRequestException(
-  //           'Each item must have sku or slug for upsert',
-  //         );
-  //       return {
-  //         updateOne: {
-  //           filter: p['sku'] ? { sku: p['sku'] } : { slug: p['slug'] },
-  //           update: { $set: p },
-  //           upsert: true,
-  //         },
-  //       };
-  //     }),
-  //   );
-  //   const res = await this.productModel.bulkWrite(ops, { ordered: false });
+  /**
+   * FIXED:
+   * - Accept DTOs (strings for ids are fine; Mongoose will cast)
+   * - Safe casts for sku/slug
+   * - BulkWrite summary using public fields (no .result/.nMatched/.nModified)
+   */
+  // async upsertManyByKey(items: Partial<CreateProductDto>[]) {
+  //   // Build typed bulk ops
+  //   const ops: AnyBulkWriteOperation[] = [];
+
+  //   for (const raw of items) {
+  //     const p = raw;
+
+  //     // Optional category validation per item (Mongoose will cast strings to ObjectId on write)
+  //     const categoryId =
+  //       typeof p.categoryId === 'string' ? p.categoryId : undefined;
+  //     const subCategoryId =
+  //       typeof p.subCategoryId === 'string' ? p.subCategoryId : undefined;
+  //     if (categoryId || subCategoryId) {
+  //       await this.ensureCategoriesExist(
+  //         categoryId ?? null,
+  //         subCategoryId ?? null,
+  //       );
+  //     }
+
+  //     // Decide upsert key
+  //     const sku = typeof p.sku === 'string' ? p.sku : undefined;
+  //     const slug = typeof p.slug === 'string' ? p.slug : undefined;
+  //     if (!sku && !slug) {
+  //       throw new BadRequestException(
+  //         'Each item must have sku or slug for upsert',
+  //       );
+  //     }
+
+  //     ops.push({
+  //       updateOne: {
+  //         filter: sku ? { sku } : { slug: slug! },
+  //         update: { $set: p },
+  //         upsert: true,
+  //       },
+  //     });
+  //   }
+
+  //   // Typed result — no "any" casts, no private .result access
+  //   const res: BulkWriteResult = await this.productModel.bulkWrite(ops, {
+  //     ordered: false,
+  //   });
+
   //   return {
-  //     upserted: res.upsertedCount ?? (res.result?.upserted?.length || 0),
-  //     modified: res.modifiedCount ?? res.nModified ?? 0,
-  //     matched: res.matchedCount ?? res.nMatched ?? 0,
+  //     upserted: res.upsertedCount ?? 0,
+  //     modified: res.modifiedCount ?? 0,
+  //     matched: res.matchedCount ?? 0,
+  //     inserted: res.insertedCount ?? 0,
+  //     // deleted:  res.deletedCount  ?? 0, // include if you add delete ops later
   //   };
   // }
 
-  /** Listing with filters, sorting, pagination, and audience via categories */
   async findAllWithQuery(q: QueryProductDto) {
     const {
       categoryId,
@@ -140,7 +162,6 @@ export class ProductsService {
     if (categoryId) filter.categoryId = categoryId;
     if (subCategoryId) filter.subCategoryId = subCategoryId;
 
-    // Category-based audience filter (only when no explicit category filters)
     if (audience && !categoryId && !subCategoryId) {
       const catIds = await this.categoryModel
         .find(
@@ -169,7 +190,6 @@ export class ProductsService {
     const sort: Record<string, 1 | -1> = {
       [sortBy]: sortOrder === 'desc' ? -1 : 1,
     };
-
     const pageNum = Math.max(Number(page) || 1, 1);
     const limitNum = Math.min(Math.max(Number(limit) || 12, 1), 100);
     const skip = (pageNum - 1) * limitNum;
