@@ -27,17 +27,6 @@ export class ProductsController {
   }
 
   /**
-   * Bulk upsert by sku or slug.
-   * - Idempotent: re-run safe.
-   * - Each item validated (categories).
-   */
-  // src/products/products.controller.ts
-  // @Post('bulk')
-  // bulk(@Body() items: Partial<CreateProductDto>[]) {
-  //   return this.productsService.upsertManyByKey(items);
-  // }
-
-  /**
    * List with filters/pagination/sorting.
    * - Supports: search, audience (via categories), price range, stock, category/subCategory.
    * - Returns { products, total, page, totalPages }.
