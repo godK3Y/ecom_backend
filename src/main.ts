@@ -6,10 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const corsOrigins =
     process.env.NODE_ENV === 'production'
-      ? [
-          'https://tofu-frontend-one.vercel.app',
-          'https://tofu-backend.onrender.com',
-        ]
+      ? ['https://tofu-frontend-one.vercel.app']
       : [
           'http://localhost:3001',
           'http://localhost:3000',
